@@ -1,0 +1,28 @@
+전체 흐름 정리
+1. 사용자가 PDF 선택
+2. 업로드 버튼 클릭
+3. app.js가 / api / upload로 파일 전송
+4. Spring이 jobId 응답
+5. app.js가 2초마다 / api / status 호출
+6. Spring이 처음에는 PROCESSING 응답
+7. 세번째쯤 COPLETED 응답
+8. app.js가 결과 화면 표시
+
+요약
+버튼 클릭 -> Ajax 요청 -> 서버 JSON 응답 -> 화면 전환
+
+app.js 흐름도
+showStep()
+→ 화면 바꾸기
+
+startLoadingMessages()
+→ 로딩 문구 바꾸기
+
+stopLoadingMessages()
+→ 로딩 문구 멈추기
+
+startPolling(jobId)
+→ 서버에 계속 상태 묻기
+
+$.ajax()
+→ Spring Boot API 호출하기
