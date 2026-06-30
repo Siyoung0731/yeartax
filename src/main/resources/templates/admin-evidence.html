@@ -39,10 +39,22 @@
       // 1. 화면이 켜지자마자 대기 중(PENDING)인 목록 불러오기
       loadPendingList();
 
+      // 2. 공통 함수 loadPendingList() : 로컬 스토리지에서 토큰 가져오기
+      function getJwtToken() {
+        return localStorage.getItem('jwtToken');
+      }
+
       function loadPendingList() {
         $.ajax({
           url: '/api/evidence/admin/pending-list',
           type: 'GET',
+          // 백엔드에 요청하기 직전 헤더에 JWT 토큰을 넣음
+          beforeSend: function(xhr) {
+            let token = getJwtToken();
+            if(token) {
+              xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            }
+          },
           success: function(data) {
             let $tbody = $('#evidenceList');
             $tbody.empty();
@@ -71,8 +83,12 @@
               });
             }
           },
-          error: function() {
-            alert("목록을 불러오는 데 실패했습니다.");
+          error: function(xhr) {
+            if(xhr.status == 403) {
+              alert("관리자 권한이 없거나 만료되었습니다.");
+            } else {
+              alert("목록을 불러오는 데 실패했습니다.");
+            }
           }
         });
       }
@@ -84,12 +100,22 @@
           $.ajax({
             url: '/api/evidence/admin/approve/' + evidenceId,
             type: 'POST',
+            beforeSend: function(xhr) {
+              let token = getJwtToken();
+              if(token) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+              }
+            },
             success: function(response) {
-              alert(response);
+              alert(response);      // 서버에서 "승인 완료" 등의 텍스트를 보낸다고 가정
               loadPendingList();    //승인 완료 후 목록 다시 새로고침
             },
-            error: function() {
-              alert("승인 처리 중 오류가 발생했습니다.");
+            error: function(xhr) {
+              if(xhr.status == 403) {
+                alert("권한이 없습니다.");
+              } else {
+                alert("승인 처리 중 오류가 발생했습니다.");
+              }
             }
           });
         }

@@ -20,13 +20,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DashboardController {
 
-  private final YearTaxRepository yearTaxRepository;
+  private final YearTaxRepository yearTaxRepo;
   
   // 대시보드 데이터 불러오기 API
   @GetMapping("/{jobId}")
   public ResponseEntity<Map<String, Object>> getDashboardData(@PathVariable("jobId") String jobId) {
     // 1. DB에서 데이터 조회
-    Optional<YearTax> yearTaxOptional = yearTaxRepository.findById(jobId);
+    Optional<YearTax> yearTaxOptional = yearTaxRepo.findById(jobId);
 
     // 2. 데이터를 JSON으로 포장
     Map<String, Object> responseData = new HashMap<>();

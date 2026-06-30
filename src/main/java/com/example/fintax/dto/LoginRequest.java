@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LoginRequest {
-  private String jobId;
-  private String password;
+  private String jobId;   // 사번
+  private String password;      // 비밀번호
 }

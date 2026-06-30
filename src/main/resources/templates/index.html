@@ -43,18 +43,16 @@
           <h4 class="card-title fw-bold mb-4">🚀 빠른 메뉴 (Quick Links)</h4>
 
           <div class="d-grid gap-3">
-            <a href="/pdf-upload.html" class="btn btn-outline-primary btn-lg text-start">
+            <a href="/view/pdf-upload" class="btn btn-outline-primary btn-lg text-start">
               📄 1. 국세청 간소화 PDF 업로드
             </a>
-            <a href="/dependent-register.html" class="btn btn-outline-success btn-lg text-start">
+            <a href="/view/dependent-register" class="btn btn-outline-success btn-lg text-start">
               👨‍👩‍👧‍👦 2. 부양가족(인적공제) 등록
             </a>
-            <a href="/" class="btn btn-secondary mb-3">⬅️ 메인으로 돌아가기</a>
-            <a href="/evidence-upload.html" class="btn btn-outline-warning btn-lg text-start">
+            <a href="/view/evidence-upload" class="btn btn-outline-warning btn-lg text-start">
               🧾 3. 누락분 수동 영수증 제출
             </a>
-            <a href="/" class="btn btn-secondary mb-3">⬅️ 메인으로 돌아가기</a>
-            <a href="/admin-evidence.html" class="btn btn-dark btn-lg text-start">
+            <a href="/view/admin-evidence" class="btn btn-dark btn-lg text-start">
               🔒 [관리자 전용] 영수증 결재함
             </a>
           </div>
@@ -101,7 +99,7 @@
 
       if(!token) {
         alert("로그인이 필요한 서비스입니다.");
-        window.location.href="/login.html";
+        window.location.href="login";
         return;     // 아래쪽 차트 그리는 로직이 실행되지 않도록 막음
       }
 

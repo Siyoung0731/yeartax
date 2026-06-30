@@ -16,7 +16,7 @@
     </div>
     <div class="mb-3">
       <label>비밀번호</label>
-      <input type="password" id="password" class="form-control" placeholder="password123">
+      <input type="password" id="password" class="form-control" placeholder="pwd1234">
     </div>
     <button onclick="login()" class="btn btn-primary w-100">로그인</button>
   </div>
@@ -36,10 +36,17 @@
       contentType: 'application/json',
       data: JSON.stringify(loginData),
       success: function(response) {
-        //서버가 준 토큰을 브라우저 저장소(localStorage)에 저장
+        //1. 서버가 준 토큰을 브라우저 저장소(localStorage)에 저장
         localStorage.setItem("jwtToken", response.token);
-        alert("로그인 성공!");
-        window.location.href = "/";   // 메인 페이지로 이동
+
+        //2. 백엔드에서 보낸 '최초 로그인(비밀번호 변경 필요)' 여부 확인
+        if(response.requirePasswordChange == true) {
+          alert(response.message);
+          window.location.href="/view/change-password";
+        } else {
+          alert("로그인 성공");
+          window.location.href="/";
+        }
       },
       error: function() {
         alert("로그인 실패: 아이디 또는 비밀번호를 확인하세요.");
