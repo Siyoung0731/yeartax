@@ -94,3 +94,15 @@ YearTax status:
 
 ```text
 PROCESSING → SUBMITTED → FINALIZED
+
+ManualEvidence status:
+
+```text
+PENDING -> APPROVED
+PENDING -> REJECTED
+
+▶️ How to Run
+1. Oracle DB 실행 및 접속 확인
+2. application.properties 에서 DB 접속 정보 설정
+3. Spring Boot 애플리케이션 실행
+4. 브라우저에서 접속
