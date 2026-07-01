@@ -1,66 +1,96 @@
-### 🏢 사내 연말정산 시스템 (FinTax)
+### 🚀 사내 연말정산 시스템 (FinTax)
 
-기업의 연말정산 업무를 자동화하고 효율적으로 관리하기 위한 사내 전용 웹 애플리케이션입니다.
-기존의 복잡한 서류 제출 방식을 개선하고, 인사팀(관리자)과 임직원(사용자) 모두에게 직관적이고 안전한 정산 프로세스를 제공합니다.
+기업의 연말정산 업무를 자동화하고 효율적으로 관리하기 위한 사내 전용 웹 애플리케이션입니다.  
+사원은 본인의 연말정산 자료를 등록하고 예상 환급액을 확인할 수 있으며, 인사담당자는 사원 정보 일괄 등록, 증빙 영수증 결재, 정산 최종 마감 업무를 처리할 수 있습니다.
 
-🛠️ Tech Stack
+---
 
-Backend: Spring Boot, Spring Security, Spring Data JPA
+### 🛠 Tech Stack
 
-Database: Oracle DB (Free)
+Backend: Spring Boot, Spring Security, Spring Data JPA  
+Database: Oracle DB  
+Frontend: HTML5, Bootstrap, JavaScript, jQuery, AJAX  
+Security/Auth: JWT, BCrypt Password Encoder  
+File Upload: MultipartFile, Local File Storage
 
-Frontend: HTML5, CSS3 (Bootstrap), JavaScript (jQuery, AJAX)
+---
 
-Security/Auth: JWT (JSON Web Token), BCrypt Password Encoder
+### 📌 Core Features & Business Logic
 
-🌟 Core Features & Business Logic
+#### 1. B2B 사내 계정 관리 및 보안 로그인
 
-1. 🔐 B2B 최적화 계정 및 보안 시스템 (No Sign-up)
+- 별도의 회원가입 없이 인사담당자가 CSV 파일로 사원 정보를 일괄 등록합니다.
+- 사번, 이름, 부서 정보를 기반으로 `YearTax` 계정이 생성됩니다.
+- 초기 비밀번호는 `사번@fin24` 형식으로 자동 발급되며 BCrypt로 암호화되어 저장됩니다.
+- 최초 로그인 시 `isFirstLogin = 1`이면 비밀번호 변경 화면으로 강제 이동합니다.
+- 비밀번호 변경 완료 후 `isFirstLogin = 0`으로 변경되어 정상 대시보드 접근이 가능합니다.
+- 로그인 성공 시 JWT를 발급하고, 이후 API 요청은 `Authorization: Bearer {token}` 헤더를 통해 인증합니다.
 
-사내 시스템의 특성을 반영하여 불특정 다수의 '회원가입' 기능을 전면 폐지하고, 데이터의 정합성을 보장하는 중앙 통제식 계정 관리를 구현했습니다.
+#### 2. 사원 전용 대시보드
 
-인사팀 CSV 일괄 등록: 관리자가 사원 정보(사번, 이름, 부서 등)를 CSV로 업로드하면 시스템이 자동으로 계정을 생성합니다.
+- JWT에서 현재 로그인한 사번을 추출하여 본인의 정산 정보만 조회합니다.
+- 사원 이름, 부서, 사번, 현재 예상 환급액을 대시보드에 표시합니다.
+- PDF 업로드, 부양가족 등록, 수동 영수증 제출 페이지로 이동할 수 있는 메뉴를 제공합니다.
+- 관리자 전용 메뉴로 영수증 결재함, 사원 정보 일괄 등록, 정산 최종 마감 화면을 제공합니다.
+- 정산 상태가 `SUBMITTED` 또는 `FINALIZED`인 경우 최종 제출 버튼을 비활성화합니다.
 
-초기 비밀번호 자동 발급: 계정 생성 시 사번 + 특정문자열 조합으로 초기 비밀번호를 자동 부여하며, 반드시 BCrypt로 암호화하여 DB에 저장합니다.
+#### 3. 부양가족 인적공제 등록
 
-최초 로그인 감지 및 변경 강제: 사원이 초기 비밀번호로 최초 로그인(isFirstLogin == true) 시, 시스템 사용을 차단하고 비밀번호 변경 화면으로 강제 리다이렉트 시켜 보안을 강화합니다.
+- `YearTax`와 `Dependent`는 1:N 관계로 구성됩니다.
+- 사원이 부양가족을 등록하면 `Dependent` 테이블에 저장됩니다.
+- 동일 사번과 동일 주민등록번호 조합의 중복 등록을 방지합니다.
+- 부양가족 1명 등록 시 `YearTax.resultAmount`에 1,500,000원이 자동 반영됩니다.
+- 정산 상태가 `SUBMITTED` 또는 `FINALIZED`인 경우 추가 등록을 차단합니다.
 
-Stateless JWT 인증: 세션(Session)을 배제하고 JWT를 활용하여 API 통신을 수행합니다. 프론트엔드는 발급받은 토큰을 localStorage에 보관하고, 이후 모든 요청의 Authorization 헤더에 담아 전송합니다.
+#### 4. 국세청 간소화 PDF 업로드 및 공제 금액 반영
 
-2. 👨‍👩‍👧‍👦 부양가족(인적공제) 등록 및 자동 계산
+- 사원이 PDF 파일을 업로드하면 서버에서 파일 형식을 검증합니다.
+- 현재는 테스트용 Mock 파싱 로직을 통해 의료비, 교육비, 신용카드 공제 금액을 계산합니다.
+- 계산된 PDF 공제 금액은 `pdfDeductionAmount`에 저장되고 `resultAmount`에 누적됩니다.
+- 이미 PDF 공제 내역이 반영된 경우 중복 업로드를 차단합니다.
+- 추후 PDFBox 기반 실제 PDF 텍스트 파싱 로직으로 교체할 수 있도록 Service 구조로 분리했습니다.
 
-1:N 데이터 매핑: 사원(YearTax)과 부양가족(Dependent) 간의 일대다 관계를 JPA로 구성했습니다.
+#### 5. 수동 영수증 증빙 업로드
 
-실시간 예상 환급액 반영: 부양가족이 등록될 때마다 세법 기준(1인당 기본공제 150만 원)을 적용하여 예상 환급액을 자동으로 재계산합니다.
+- 사원이 누락된 영수증 파일을 JPG, PNG, PDF 형식으로 업로드할 수 있습니다.
+- 업로드된 파일은 서버의 `uploads/evidences` 경로에 UUID 파일명으로 저장됩니다.
+- DB에는 원본 파일명, 저장 파일 경로, 업로드 시간, 금액, 카테고리, 상태값이 저장됩니다.
+- 영수증 최초 상태는 `PENDING`입니다.
+- 수동 영수증은 업로드 즉시 환급액에 반영하지 않고, 인사담당자 승인 후 반영됩니다.
 
-3. 📄 국세청 간소화 PDF 및 수동 영수증 관리
+#### 6. 인사담당자 영수증 결재
 
-국세청 PDF 파싱 및 데이터베이스 저장 (진행 중)
+- 인사담당자는 `PENDING` 상태의 영수증 목록을 조회할 수 있습니다.
+- 승인 시 영수증 상태가 `APPROVED`로 변경되고, 해당 금액이 사원의 `resultAmount`에 반영됩니다.
+- 반려 시 영수증 상태가 `REJECTED`로 변경되며 반려 사유가 저장됩니다.
+- 반려된 경우 사원의 정산 상태를 다시 `PROCESSING`으로 돌려 수정 제출이 가능하도록 합니다.
 
-누락된 의료비/기부금 등 수동 영수증 제출 기능 제공
+#### 7. 정산 최종 제출 및 마감 프로세스
 
-4. 💼 [관리자 전용] 영수증 결재 대기함 (Pending List)
+- 사원은 모든 자료 입력을 마친 뒤 최종 제출할 수 있습니다.
+- 최종 제출 시 `YearTax.status`가 `PROCESSING`에서 `SUBMITTED`로 변경됩니다.
+- `SUBMITTED` 상태에서는 PDF 업로드, 부양가족 등록, 영수증 업로드 등 쓰기 API가 차단됩니다.
+- 인사담당자는 제출 완료된 정산을 검토한 뒤 `FINALIZED`로 최종 마감할 수 있습니다.
+- `FINALIZED` 상태에서는 더 이상 수정할 수 없습니다.
 
-보안 API 통신: 관리자 권한(/api/admin/)이 필요한 데이터 요청 시, 프론트엔드($.ajax)에서 JWT 토큰을 헤더에 동적으로 삽입하여 403 Forbidden을 방지합니다.
+---
 
-사원들이 제출한 수동 영수증을 검토하고 즉시 승인(Approve) 처리할 수 있는 비동기 대시보드를 제공합니다.
+### 🧱 Architecture Highlights
 
-🏛️ Architecture Highlights
+- `ViewController`: Thymeleaf 화면 이동 담당
+- `LoginController`: 로그인, 비밀번호 변경, JWT 발급 담당
+- `DashboardController`: 사원 대시보드 데이터 조회 담당
+- `DependentController`: 부양가족 등록 및 인적공제 반영 담당
+- `PdfController`: PDF 업로드 및 공제 금액 반영 담당
+- `EvidenceController`: 수동 영수증 업로드, 승인, 반려 담당
+- `HrAdminController`: 사원 CSV 일괄 등록 담당
+- `TaxSubmissionController`: 최종 제출 및 관리자 마감 처리 담당
 
-관심사의 분리 (Separation of Concerns): * ViewController (@Controller): 클라이언트의 화면 이동(View Routing)만을 전담.
+---
 
-ApiController (@RestController): 데이터 조회 및 비즈니스 로직(JSON 반환)만을 전담하여 유지보수성을 극대화.
+### 🔐 Status Flow
 
-통합 인증 테이블 구조: 별도의 User 테이블을 두지 않고 YearTax 엔티티를 '인증'과 '정산'의 통합 테이블로 활용하여 JOIN 연산을 최소화하고 성능을 높였습니다.
+YearTax status:
 
-🚀 How to Run
-
-Oracle DB (FREEPDB1) 구동 및 접속 확인
-
-application.properties 내 DB 접속 정보(username, password) 세팅
-
-Spring Boot Application 실행 (FinTaxApplication.java)
-
-브라우저에서 http://localhost:9090/login 접속
-
-Developed by [본인 이름/닉네임]
+```text
+PROCESSING → SUBMITTED → FINALIZED
