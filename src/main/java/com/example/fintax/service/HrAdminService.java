@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.fintax.dto.EmployeeCsvDto;
 import com.example.fintax.entity.YearTax;
 import com.example.fintax.repository.YearTaxRepository;
 
@@ -19,8 +20,8 @@ public class HrAdminService {
 
   // 인사팀이 올린 CSV 데이터를 리스트(employeeDetailList)로 받았다고 가정
   @Transactional
-  public void registerEmployee(List<EmployeeCsvDto> employDetailList) {
-    for(EmployeeCsvDto dto : employDetailList) {
+  public void registerEmployee(List<EmployeeCsvDto> empDataList) {
+    for(EmployeeCsvDto dto : empDataList) {
 
       // 초기 비밀번호 생성 : (규칙 = 사번 + "@fin24")
       String rawInitialPassword = dto.getJobId() + "@fin24";
@@ -34,7 +35,7 @@ public class HrAdminService {
                                    .name(dto.getName())
                                    .department(dto.getDepartment())
                                    .password(encodedPassword)
-                                   .isFirstLogin(true)
+                                   .isFirstLogin(1)
                                    .build();
       
       yearTaxRepo.save(newEmployee);                                   

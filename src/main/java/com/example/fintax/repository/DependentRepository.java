@@ -6,4 +6,5 @@ import com.example.fintax.entity.Dependent;
 
 public interface DependentRepository extends JpaRepository<Dependent, Long> {
   //기본 CRUD 기능
+  boolean existsByYearTax_JobIdAndIdentityNo(String jobid, String identityNo);
 }

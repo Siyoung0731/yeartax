@@ -40,12 +40,12 @@
         localStorage.setItem("jwtToken", response.token);
 
         //2. 백엔드에서 보낸 '최초 로그인(비밀번호 변경 필요)' 여부 확인
-        if(response.requirePasswordChange == true) {
+        if(response.requirePasswordChange === true) {
           alert(response.message);
           window.location.href="/view/change-password";
         } else {
           alert("로그인 성공");
-          window.location.href="/";
+          window.location.href=response.redirectUrl;
         }
       },
       error: function() {

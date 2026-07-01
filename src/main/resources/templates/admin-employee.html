@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사원 정보 일괄 등록 (관리자)</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-light">
+
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">⚙️ [관리자] 사원 정보 CSV 일괄 등록</h4>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              인사팀에서 작성한 사원 정보 엑셀(CSV) 파일을 업로드해주세요.<br>  
+              <strong>※ 파일 양식:</strong>1열: 사번, 2열: 이름, 3열: 부서명 (첫 줄을 헤더로 무시됩니다)
+            </p>
+
+            <!-- 파일 업로드 폼 -->
+            <div class="mb-3">
+              <input class="form-control form-control-lg" type="file" id="csvFile" accept=".csv">
+            </div>
+
+            <button class="btn btn-primary w-100 btn-lg" onclick="uploadCsv()">
+              업로드 및 계정 일괄 생성 🚀
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <a href="/" class="btn btn-outline-secondary">&larr; 메인 로비로 돌아가기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- script -->
+  <script>
+    function uploadCsv() {
+      // 1. 선택된 파일 가져오기
+      let fileInput = document.getElementById('csvFile');
+      let file = fileInput.files[0];
+
+      if(!file) {
+        alert("CSV 파일을 먼저 선택해주세요.");
+        return;
+      }
+
+      // 2. 파일을 전송하기 위해 FormData 객체에 담기 (Ajax로 파일을 보낼 때 필수!)
+      let formData = new FormData();
+      formData.append("file", file);        // 컨트롤러의 @RequestParam("file")과 이름이 같아야 함
+
+      // 3. 로컬 스토리지에서 JWT 꺼내기
+      let token = localStorage.getItem('jwtToken');
+
+      // 4. Ajax 통신으로 백엔드 API 요청
+      $.ajax({
+        url: "/api/admin/employees/upload",
+        type: "POST",
+        data: formData,
+        processData: false,                           // JQuery가 데이터를 문자열로 변환하지 않도록 설정 (파일 전송 시 필수)
+        contentType: false,                           // JQuery가 기본 Content-Type을 설정하지 않도록 방지 (파일 전송 시 필수)
+        beforeSend: function(xhr) {
+          // 관리자 API이므로 JWT 토큰을 반드시 헤더에 넣어서 신분 인증
+          if(token) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+          }
+        },
+        success: function(response) {
+          //백엔드 컨트롤러가 보낸 성공 메세지 출력
+          alert("✅ 성공: " + response);
+          fileInput.value = " ";   //파일 입력창 초기화
+        },
+        error: function(xhr) {
+          if(xhr.status == 403) {
+            alert("🚨 권한이 없습니다. (관리자만 접근 가능)");
+          } else {
+            alert("❌ 업로드 실패: " + xhr.responseText);
+          }
+        }
+      });
+
+    }
+  </script>
+</body>
+</html>

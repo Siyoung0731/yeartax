@@ -39,16 +39,21 @@
             <label for="isPathfinder" class="form-check-label">만 70세 이상 경로우대 대상자</label>
           </div>
 
-          <input type="hidden" id="jobId" value="1234">
           <button type="button" id="btnSubmit" class="btn btn-success w-100">부양가족 추가</button>
         </form>
       </div>
+    </div>
+    <div class="mt-3">
+      <a href="/" class="btn btn-outline-secondary">&larr; 메인 로비로 돌아가기</a>
     </div>
   </div>
 
   <script>
     $(document).ready(function() {
       $('#btnSubmit').click(function() {
+        const $btn = $('#btnSubmit');
+        $btn.prop("disabled", true);
+
         let isChecked = $("#isPathfinder").is(":checked") ? "Y" : "N";
 
         $.ajax({
@@ -58,7 +63,6 @@
             "Authorization": "Bearer " + localStorage.getItem("jwtToken")
           },
           data: {
-            jobId: $("#jobId").val(),
             relation: $("#relation").val(),
             name: $("#name").val(),
             identityNo: $("#identityNo").val(),
@@ -67,9 +71,13 @@
           success: function(res) {
             alert(res);
             $("#dependentForm")[0].reset();
+            window.location.href = "/";
           },
-          error: function() {
-            alert("등록 실패");
+          error: function(xhr) {
+            alert("등록 실패 " + xhr.responseText);
+          },
+          complete: function() {
+            $btn.prop("disabled", false);
           }
         });
       });

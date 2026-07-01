@@ -47,6 +47,9 @@
         </form>
       </div>
     </div>
+    <div class="mt-3">
+      <a href="/" class="btn btn-outline-secondary">&larr; 메인 로비로 돌아가기</a>
+    </div>
   </div>
   
   <script>
@@ -59,7 +62,6 @@
         }
         // 2. 폼 데이터 포장(파일 업로드를 위한 FormData 객체 사용)
         let formData = new FormData();
-        formData.append("jobId", $("#jobId").val());
         formData.append("category", $("#category").val());
         formData.append("amount", $("#amount").val());
         formData.append("file", $("#receiptImage")[0].files[0]);      // 파일 자체를 저장
@@ -73,19 +75,21 @@
         $.ajax({
           url : "/api/evidence/upload",
           type : "POST",
+          headers: {
+            "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+          },
           data : formData,
           processData : false,      //JQuery 가 데이터를 문자열로 바꾸지 않도록 설정(파일 전송 필수)
           contentType : false,       //브라우저가 알아서 multipart/form-data로 설정하도록 false 지정(파일 전송 필수)
 
-          success: function(response) {
+          success: function(res) {
             //서버에서 성공 응답이 왔을 때
-            alert("성공적으로 결재가 올라갔습니다!\n상태: " + response);
-            $("#evidenceForm")[0].reset();    // 입력 폼 초기화(비워주기)
+            alert(res);
+            window.location.href = "/";
           },
-          error: function(xhr, status, error) {
+          error: function(xhr) {
             //서버에서 에러가 났을 때
-            alert("업로드 중 오류가 발생했습니다. 서버 로그를 확인해주세요.")
-            console.error("Error: " + error);
+            alert("업로드 실패: " + xhr.res);
           },
 
           complete: function() {

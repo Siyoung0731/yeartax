@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import com.example.fintax.entity.YearTax;
 import com.example.fintax.repository.YearTaxRepository;
@@ -46,6 +47,25 @@ public class DashboardController {
     }
 
     //3. JSON으로 응답 변환
+    return ResponseEntity.ok(responseData);
+  }
+  
+  // 나의 대시보드 데이터 불러오기 API
+  @GetMapping("/me")
+  public ResponseEntity<Map<String, Object>> getMyDashboard(Authentication authentication) {
+    // JWT 필터에서 사번을 인증 객체에 넣어놨기 때문에 가능
+    String jobId = authentication.getName();
+
+    YearTax yearTax = yearTaxRepo.findById(jobId)
+              .orElseThrow(() -> new RuntimeException("대시보드 정보를 찾을 수 없습니다."));
+
+    Map<String, Object> responseData = new HashMap<>();
+    responseData.put("jobId", yearTax.getJobId());
+    responseData.put("name", yearTax.getName());
+    responseData.put("department", yearTax.getDepartment());
+    responseData.put("resultAmount", yearTax.getResultAmount() != null ? yearTax.getResultAmount() : 0);
+    responseData.put("status", yearTax.getStatus());
+
     return ResponseEntity.ok(responseData);
   }
 }

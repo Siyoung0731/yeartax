@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,45 +16,70 @@ import com.example.fintax.dto.LoginRequest;
 import com.example.fintax.entity.YearTax;
 import com.example.fintax.repository.YearTaxRepository;
 import com.example.fintax.security.JwtTokenProvider;
-import com.example.fintax.service.LoginService;
+import org.springframework.security.core.Authentication;
+import com.example.fintax.dto.ChangePasswordRequest;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")           // 프론트와 포트가 다른 경우를 위한 CORS 허용
+@CrossOrigin(origins = "*")
 public class LoginController {
   private final BCryptPasswordEncoder passwordEncoder;
-  private final LoginService loginService;
   private final YearTaxRepository yearTaxRepo;
   private final JwtTokenProvider jwtTokenProvider;
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-    // 1. 사번으로 DB에서 정보 조회 및 BCrypt 비밀번호 검증(기존 로직)
-    YearTax employee = yearTaxRepo.findById(req.getJobId())
-             .orElseThrow(() -> new RuntimeException("사번이 존재하지 않습니다."));
+    YearTax employee = yearTaxRepo.findById(req.getJobId().strip())
+        .orElseThrow(() -> new RuntimeException("사번이 존재하지 않습니다."));
 
-    if(!passwordEncoder.matches(req.getPassword(), employee.getPassword())) {
+    if(!passwordEncoder.matches(req.getPassword(), employee.getPassword().strip())) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
     }
 
-    // 2. JWT 토큰 발급 (기존 로직)
     String token = jwtTokenProvider.createToken(employee.getJobId());
+    boolean requirePasswordChange = Integer.valueOf(1).equals(employee.getIsFirstLogin());
 
-    // 3. 최종 로그인 여부에 따라 응답 데이터(JSON)를 다르게 내려줌
     Map<String, Object> responseData = new HashMap<>();
     responseData.put("token", token);
+    responseData.put("requirePasswordChange", requirePasswordChange);
 
-    if(employee.isFirstLogin()) {
-      responseData.put("requiredPasswordChange", true);
-      responseData.put("message", "최초 로그인입니다. 비밀번호를 변경해주세요.");
+    if(requirePasswordChange) {
+      responseData.put("message", "초기 비밀번호 변경이 필요합니다.");
+      responseData.put("redirectUrl", "/view/change-password");
     } else {
-      responseData.put("requiredPasswordChage", false);
       responseData.put("message", "로그인 성공");
+      responseData.put("redirectUrl", "/");
     }
 
     return ResponseEntity.ok(responseData);
   }
+
+  @PostMapping("/change-password") 
+  public ResponseEntity<?> changePassword(
+    @RequestBody ChangePasswordRequest req, 
+    Authentication authentication) {
+      // 유효성 검증
+      if(authentication == null || authentication.getName() == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+      }
+      if(req.getNewPassword() == null || req.getNewPassword().isBlank()) {
+        return ResponseEntity.badRequest().body("새 비밀번호를 입력해주세요.");
+      }
+
+      // 프론트에서 사번을 보내지 않아도 됌, JWT 토큰 안에 있는 사번을 서버가 꺼내 쓰는 구조
+      String jobId = authentication.getName();
+
+      YearTax employee = yearTaxRepo.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("사번이 존재하지 않습니다."));
+                
+      employee.setPassword(passwordEncoder.encode(req.getNewPassword()));
+      employee.setIsFirstLogin(0);
+
+      yearTaxRepo.save(employee);
+
+      return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+    }
 }

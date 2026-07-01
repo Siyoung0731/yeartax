@@ -35,4 +35,21 @@ public class ViewController {
   public String adminEvidence() {
     return "admin-evidence";
   }
+
+  // 5. [관리자 전용] 사원 CSV 일괄 등록 화면 이동
+  @GetMapping("/view/admin-employee")
+  public String adminEmployee() {
+    return "admin-employee";
+  }
+
+  // 6. 비밀번호 변경 페이지 이동
+  @GetMapping("/view/change-password")
+  public String changePassword() {
+    return "change-password";
+  }
+  // 7. 정산 마감 관리자용 화면 이동
+  @GetMapping("/view/admin-tax")
+  public String adminTax() {
+    return "admin-tax";
+  }
 }

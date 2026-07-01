@@ -15,10 +15,16 @@
 <body>
   <div class="container mt-5">
     <div class="row mb-4">
-      <div class="col-12 text-center">
-        <h2 class="fw-bold">2026년 귀속 사내 연말정산</h2>
-        <p class="text-muted">홍길동 사원님의 현재 정산 진행 현황입니다.</p>
-        <button onclick="logout()" class="btn btn-sm btn-light ms-2 border" style="font-size: 0.8rem;">로그아웃</button>
+      <div class="text-center mb-4">
+        <h2 class="fw-bold">FinTax 연말정산 대시보드</h2>
+        <p class="text-muted mb-1">
+          <span id="employeeName">-</span>님 .
+          <span id="department">-</span>
+        </p>
+        <p class="text-muted small">
+          사번: <span id="jobIdText">-</span>
+        </p>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">로그아웃</button>
       </div>
     </div>
 
@@ -32,7 +38,8 @@
           </div>
 
           <div class="text-center mt-4">
-            <h3 class="fw-bold text-primary" id="displayAmount">+ 1,500,000 원</h3>
+            <p class="text-muted mb-1">현재 예상 환급액</p>
+            <h3 class="fw-bold text-primary" id="displayAmount">+ 0 원</h3>
             <p class="text-muted small">* 위 금액은 현재까지 입력된 자료를 바탕으로 한 가계산 결과입니다.</p>
           </div>
         </div>
@@ -55,6 +62,16 @@
             <a href="/view/admin-evidence" class="btn btn-dark btn-lg text-start">
               🔒 [관리자 전용] 영수증 결재함
             </a>
+            <a href="/view/admin-employee" class="btn btn-dark btn-lg text-start">
+              🧑‍💼 [관리자 전용] 사원 정보 일괄 등록
+            </a>
+            <a href="/view/admin-tax" class="btn btn-outline-danger btn-lg text-start">
+              🧾 [관리자 전용] 정산 최종 마감
+            </a>
+            <hr>
+            <button type="button" class="btn btn-danger btn-lg fw-bold w-100" onclick="submitTax()">
+              최종 제출
+            </button>
           </div>
         </div>
       </div>
@@ -105,21 +122,36 @@
 
       // 서버에서 데이터 가져오기
       $.ajax({
-        url: '/api/dashboard/1234',
+        url: '/api/dashboard/me',
         type: 'GET',
         headers: {
           "Authorization": "Bearer " + localStorage.getItem("jwtToken")
         },
         success: function(data) {
-          console.log("받아온 데이터: " + data);    // F12 콘솔에서 확인 가능
+          $('#employeeName').text(data.name);
+          $('#department').text(data.department);
+          $('#jobIdText').text(data.jobId);
 
           const amount = data.resultAmount || 0;
           $('#displayAmount').text('+ ' + amount.toLocaleString() + ' 원');
+
           renderRefundChart(amount);    // 받은 데이터로 차트 그리기
+          
+          // 로드 후 잠금
+          if(data.status == "PROCESSING") {
+            $("#submitBtn").prop("disabled",false).text("최종 제출");
+          }
+          if(data.status == "SUBMITTED") {
+            $("#submitBtn").prop("disabled", true).text("제출 완료");
+          }
+          if(data.status == "FINALIZED") {
+            $("#submitBtn").prop("disabled", true).text("최종 마감 완료");
+          }
         },
         error: function(xhr) {
           if(xhr.status == 403 || xhr.status == 401) {
             alert("로그인이 만료되었거나 권한이 없습니다. 다시 로그인해주세요.")
+            localStorage.getItem('jwtToken');
             window.location.href = "/login";
           }
           
@@ -135,7 +167,28 @@
       alert("로그아웃 되었습니다.");
 
       //3. 로그인 페이지로 강제 이동
-      window.location.href="/login.html";
+      window.location.href="/login";
+    }
+    // 최종 제출 버튼 로직
+    function submitTax() {
+      if(!confirm("최종 제출 후에는 수정할 수 없습니다. 제출하시겠습니까?")) {
+        return;
+      }
+      
+      $.ajax({
+        url: "/api/tax/submit",
+        type: "POST",
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("jwtToken")
+        },
+        success: function(res) {
+          alert(res);
+          location.reload();
+        },
+        error: function(xhr) {
+          alert("최종 제출 실패: " + xhr.res);
+        }
+      });
     }
   </script>
 </body>
