@@ -32,18 +32,30 @@ public class LoginController {
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-    YearTax employee = yearTaxRepo.findById(req.getJobId().strip())
-        .orElseThrow(() -> new RuntimeException("사번이 존재하지 않습니다."));
 
-    if(!passwordEncoder.matches(req.getPassword(), employee.getPassword().strip())) {
+    
+    YearTax employee = yearTaxRepo.findById(req.getJobId().strip())
+    .orElseThrow(() -> new RuntimeException("사번이 존재하지 않습니다."));
+    
+    System.out.println("입력 비밀번호 : " + req.getPassword());
+    System.out.println("DB 비밀번호 : " + employee.getPassword());
+    System.out.println("matches : " +
+    passwordEncoder.matches(req.getPassword(), employee.getPassword()));
+
+    if(!passwordEncoder.matches(req.getPassword(), employee.getPassword())) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
     }
 
-    String token = jwtTokenProvider.createToken(employee.getJobId());
+    // Jwt token 발급(생성)
+    String token = jwtTokenProvider.createToken(
+      employee.getJobId(),
+      employee.getRole()
+    );
     boolean requirePasswordChange = Integer.valueOf(1).equals(employee.getIsFirstLogin());
 
     Map<String, Object> responseData = new HashMap<>();
     responseData.put("token", token);
+    responseData.put("role", employee.getRole());   // 추가
     responseData.put("requirePasswordChange", requirePasswordChange);
 
     if(requirePasswordChange) {

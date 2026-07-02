@@ -65,6 +65,7 @@ public class DashboardController {
     responseData.put("department", yearTax.getDepartment());
     responseData.put("resultAmount", yearTax.getResultAmount() != null ? yearTax.getResultAmount() : 0);
     responseData.put("status", yearTax.getStatus());
+    responseData.put("role", yearTax.getRole());
 
     return ResponseEntity.ok(responseData);
   }

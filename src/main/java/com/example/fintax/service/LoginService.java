@@ -18,16 +18,20 @@ public class LoginService {
 
   public String login(String jobId, String rawPassword) {
     String normalizedJobId = jobId.strip();
-    System.out.println("[Login jobId]: " + normalizedJobId);
+    String normalizedPassword = rawPassword.strip();    // 입력 받은 비밀번호 앞뒤 공백 제거
+
+    System.out.println("[Login Request] jobId: [" + normalizedJobId + "]");
+    System.out.println("[Login Request] rawPassword: [" + normalizedPassword + "]");
+    
 
     YearTax yearTax = yearTaxRepo.findById(normalizedJobId)
         .orElseThrow(() -> new RuntimeException("Employee number does not exist."));
 
-    if(!isPasswordMatched(rawPassword, yearTax)) {
+    if(!isPasswordMatched(normalizedPassword, yearTax)) {
       throw new IllegalArgumentException("Password does not match.");
     }
 
-    return jwtTokenProvider.createToken(yearTax.getJobId());
+    return jwtTokenProvider.createToken(yearTax.getJobId(), yearTax.getRole());
   }
 
   private boolean isPasswordMatched(String rawPassword, YearTax yearTax) {

@@ -59,13 +59,13 @@
             <a href="/view/evidence-upload" class="btn btn-outline-warning btn-lg text-start">
               🧾 3. 누락분 수동 영수증 제출
             </a>
-            <a href="/view/admin-evidence" class="btn btn-dark btn-lg text-start">
+            <a href="/view/admin-evidence" class="btn btn-dark btn-lg text-start admin-menu">
               🔒 [관리자 전용] 영수증 결재함
             </a>
-            <a href="/view/admin-employee" class="btn btn-dark btn-lg text-start">
+            <a href="/view/admin-employee" class="btn btn-dark btn-lg text-start admin-menu">
               🧑‍💼 [관리자 전용] 사원 정보 일괄 등록
             </a>
-            <a href="/view/admin-tax" class="btn btn-outline-danger btn-lg text-start">
+            <a href="/view/admin-tax" class="btn btn-outline-danger btn-lg text-start admin-menu">
               🧾 [관리자 전용] 정산 최종 마감
             </a>
             <hr>
@@ -118,6 +118,14 @@
         alert("로그인이 필요한 서비스입니다.");
         window.location.href="login";
         return;     // 아래쪽 차트 그리는 로직이 실행되지 않도록 막음
+      }
+
+      //로그인 한 사용자의 권한
+      const role = localStorage.getItem("role");
+
+      // 관리자 권한이 아닐 때는 관리자 메뉴 숨김
+      if(role !== "ROLE_ADMIN") {
+        $(".admin-menu").hide()
       }
 
       // 서버에서 데이터 가져오기

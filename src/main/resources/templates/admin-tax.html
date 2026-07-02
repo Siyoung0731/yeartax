@@ -28,16 +28,24 @@
           <div class="alert alert-warning small mb-0">
             최종 마감 후에는 사원이 PDF, 부양가족, 영수증 정보를 수정할 수 없습니다.
           </div>
+          <div class="mt-4">
+            <button class="btn btn-primary" onclick="downloadExcel()">📊 전체 정산결과 엑셀 다운로드</button>
+          </div>
         </div>
       </div>
 
-      <div class="mt-3">
-        <a href="/" class="btn btn-outline-secondary">← 메인 로비로 돌아가기</a>
-      </div>
+    </div>
+    <div class="mt-3">
+      <a href="/" class="btn btn-outline-secondary">← 메인 로비로 돌아가기</a>
     </div>
   </div>
 
   <script>
+    function downloadExcel() {
+      //Ajax가 아닌, URL 직접 이동 방식으로 호출해야 파일 다운로드가 실행됨
+      window.location.href = '/api/admin/export/excel';
+    }
+
     function finalizeTax() {
       const jobId = $("#jobId").val().trim();
 

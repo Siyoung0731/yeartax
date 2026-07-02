@@ -16,8 +16,19 @@ public class JwtTokenProvider {
       "my-secret-key-very-long-and-secure-value-32-chars-minimum".getBytes());
   private final long validityInMilliseconds = 3600000;
 
-  public String createToken(String jobId) {
+  private Claims getClaims(String token) {
+    return Jwts.parserBuilder()
+             .setSigningKey(key)
+             .build()
+             .parseClaimsJws(token)
+             .getBody();
+  }
+
+  public String createToken(String jobId, String role) {
     Claims claims = Jwts.claims().setSubject(jobId);
+    // role 추가 260702
+    claims.put("role", role);
+
     Date now = new Date();
     Date validity = new Date(now.getTime() + validityInMilliseconds);
 
@@ -42,11 +53,9 @@ public class JwtTokenProvider {
   }
 
   public String getJobId(String token) {
-    return Jwts.parserBuilder()
-        .setSigningKey(key)
-        .build()
-        .parseClaimsJws(token)
-        .getBody()
-        .getSubject();
+    return getClaims(token).getSubject();
+  }
+  public String getRole(String token) {
+    return getClaims(token).get("role", String.class);
   }
 }

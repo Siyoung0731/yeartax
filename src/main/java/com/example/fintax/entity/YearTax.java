@@ -45,6 +45,10 @@ public class YearTax {    // 부모 클래스
   @Column(name = "PDF_DEDUCTION_AMOUNT", nullable = false)
   private Integer pdfDeductionAmount = 0;
 
+  @Builder.Default
+  @Column(name = "ROLE", nullable = false)
+  private String role = "ROLE_USER";
+
   private String enterpriseCode;
 
   @Builder.Default
