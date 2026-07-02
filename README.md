@@ -111,9 +111,13 @@ JPA/Oracle DB 제약조건 충돌 해결:
 IS_FIRST_LOGIN 및 PDF_DEDUCTION_AMOUNT 등 필수 컬럼의 NOT NULL(ORA-01400) 제약조건 위반을 방어하기 위해 완벽한 디폴트 값이 포함된 샘플 INSERT 스크립트를 재구성했습니다.
 
 API 통신 및 컴파일러 에러 해결:
+
 Spring Boot 컨트롤러 파라미터 매핑 에러(500 Error)를 @PathVariable("jobId") 명시를 통해 컴파일러 옵션 의존성 없이 해결했습니다.
+
 프론트엔드 Ajax 요청 시 발생한 404 Not Found 에러를 URL 경로 슬래시(/) 누락 분석을 통해 신속히 바로잡았습니다.
+
 차트가 그려지지 않는 타이밍 이슈를, 데이터 수신 성공 직후(비동기 콜백 내부)에 캔버스를 초기화하고 new Chart()를 생성하도록 강제 렌더링 로직을 추가하여 해결했습니다.
+
 ---
 
 ### 🔐 Status Flow
