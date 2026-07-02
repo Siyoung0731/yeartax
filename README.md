@@ -102,6 +102,51 @@ PENDING -> APPROVED
 PENDING -> REJECTED
 
 ▶️ How to Run
+
+### 🚀 [Update] 사내 연말정산 시스템 실무 고도화 및 인증/대시보드 연동 완료
+1. 🏢 B2B SaaS 패키지 최적화 (아키텍처 설계)
+
+단일 엔티티 기반 인증 통합: 복잡한 인사(HR) 시스템 연동 비용을 줄이기 위해 별도의 User 테이블을 생성하지 않고, YearTax 테이블을 인증(로그인)과 정산 데이터 통합 테이블로 활용하도록 아키텍처를 재설계했습니다.
+
+
+멀티 테넌시(Multi-tenancy) 확장성 고려: 추후 다중 기업을 대상으로 한 SaaS 서비스 확장을 대비하여 기업을 구분할 수 있는 단일 테이블 격리 구조 기반을 마련했습니다.
+
+2. 🔐 보안 및 계정 통제 고도화
+
+BCrypt 암호화 적용: 비밀번호 평문 저장을 방지하기 위해 BCryptPasswordEncoder를 도입하여 DB 내 비밀번호를 안전하게 해시 암호화 처리했습니다.
+
+
+스마트 마이그레이션(Fallback) 로직: LoginService에 기존 평문 데이터(rawPassword.equals)로 로그인 시, 자동으로 BCrypt 암호화로 변환 후 DB를 갱신(UPDATE)해 주는 실무형 마이그레이션 코드를 적용했습니다.
+
+
+입력값 정제: 비밀번호 복사/붙여넣기 시 발생하는 공백 에러를 원천 차단하기 위해 rawPassword.strip() 등 입력값 전처리 로직을 추가했습니다.
+
+3. 📊 실시간 환급액 대시보드 연동 (Front-Back 통신)
+
+REST API 설계: 메인 대시보드에서 특정 사원의 현재 환급액 데이터를 JSON 형태로 반환하는 DashboardController(/api/dashboard/{jobId})를 구축했습니다.
+
+
+비동기 렌더링 (Ajax + Chart.js): 백엔드에서 받아온 RESULT_AMOUNT 데이터를 바탕으로 Chart.js 도넛 그래프가 실시간으로 렌더링되도록 프론트엔드 비동기 통신(Ajax)을 완벽하게 연동했습니다.
+
+4. 🛠️ 핵심 트러블슈팅 및 DB 무결성 확보
+JPA/Oracle DB 제약조건 충돌 해결:
+
+기존 데이터가 존재하는 상태에서 role 컬럼 타입을 변경 시도할 때 발생한 ORA-01439 및 ORA-01463 에러를, 테이블 초기화 및 안전한 VARCHAR2 타입 수정을 통해 완벽히 해결했습니다.
+
+문자열('USER')을 숫자형 컬럼에 넣으려다 발생한 ORA-01722 에러를 디버깅하여 컬럼 설정을 정상화했습니다.
+
+
+IS_FIRST_LOGIN 및 PDF_DEDUCTION_AMOUNT 등 필수 컬럼의 NOT NULL(ORA-01400) 제약조건 위반을 방어하기 위해 완벽한 디폴트 값이 포함된 샘플 INSERT 스크립트를 재구성했습니다.
+
+API 통신 및 컴파일러 에러 해결:
+
+Spring Boot 컨트롤러 파라미터 매핑 에러(500 Error)를 @PathVariable("jobId") 명시를 통해 컴파일러 옵션 의존성 없이 해결했습니다.
+
+프론트엔드 Ajax 요청 시 발생한 404 Not Found 에러를 URL 경로 슬래시(/) 누락 분석을 통해 신속히 바로잡았습니다.
+
+차트가 그려지지 않는 타이밍 이슈를, 데이터 수신 성공 직후(비동기 콜백 내부)에 캔버스를 초기화하고 new Chart()를 생성하도록 강제 렌더링 로직을 추가하여 해결했습니다.
+
+
 1. Oracle DB 실행 및 접속 확인
 2. application.properties 에서 DB 접속 정보 설정
 3. Spring Boot 애플리케이션 실행
