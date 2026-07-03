@@ -144,7 +144,7 @@
         $('#department').text(data.department);
         $('#jobIdText').text(data.jobId);
 
-        const amount = data.resultAmout || 0;
+        const amount = data.resultAmount || 0;
         $('#displayAmount').text('+ ' + amount.toLocaleString() + ' 원');
         renderRefundChart(amount);              // 차트 렌더링
 
