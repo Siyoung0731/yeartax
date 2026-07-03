@@ -96,7 +96,7 @@
         });
       }
       //3. '승인하기' 버튼 클릭 이벤트 (동적으로 생성된 버튼 처리)
-      $(document).on("click", "btn-approve", function() {
+      $(document).on("click", ".btn-approve", function() {
         let evidenceId = $(this).data("id");
 
         if(confirm(evidenceId + "번 영수증을 승인하시겠습니까? (환급액에 즉시 반영됩니다.)")) {

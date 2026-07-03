@@ -103,8 +103,8 @@ public class EvidenceController {
       }
 
   }
-  // 3. 관리자 : 대기 중(PENDING)인 영수증 목록 조회
-  @GetMapping("/admin/approve/{evidenceId}")
+  // 3. 관리자 : 영수증 승인 처리 (POST 요청으로 상태 변경)
+  @PostMapping("/admin/approve/{evidenceId}")
   public ResponseEntity<String> approveEvidence(@PathVariable("evidenceId") Long evidenceId) {
     //1. 해당 영수증을 DB에서 찾음
     ManualEvidence evidence = evidenceRepo.findById(evidenceId)

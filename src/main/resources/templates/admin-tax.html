@@ -42,8 +42,36 @@
 
   <script>
     function downloadExcel() {
-      //Ajax가 아닌, URL 직접 이동 방식으로 호출해야 파일 다운로드가 실행됨
-      window.location.href = '/api/admin/export/excel';
+      const token = localStorage.getItem('jwtToken');
+
+      if(!token) {
+        alert("로그인 후 다시 시도해주세요.");
+        return;
+      }
+      
+      $.ajax({
+        url: '/api/admin/export/excel',
+        type: 'GET',
+        headers: {
+          "Authorization": "Bearer " + token
+        },
+        xhrFields: {
+          responseType: 'blob'                // 엑셀 파일 바이너리를 받음
+        },
+        success: function(blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'tax_result_2024.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        },
+        error: function(xhr) {
+          console.error("엑셀 다운로드 실패: " + xhr.status);
+        }
+      });
     }
 
     function finalizeTax() {

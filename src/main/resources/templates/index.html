@@ -50,13 +50,13 @@
           <h4 class="card-title fw-bold mb-4">🚀 빠른 메뉴 (Quick Links)</h4>
 
           <div class="d-grid gap-3">
-            <a href="/view/pdf-upload" class="btn btn-outline-primary btn-lg text-start">
+            <a href="/view/pdf-upload" id="btnPdfUpload" class="btn btn-outline-primary btn-lg text-start quick-btn">
               📄 1. 국세청 간소화 PDF 업로드
             </a>
-            <a href="/view/dependent-register" class="btn btn-outline-success btn-lg text-start">
+            <a href="/view/dependent-register" id="btnDependentRegister" class="btn btn-outline-success btn-lg text-start quick-btn">
               👨‍👩‍👧‍👦 2. 부양가족(인적공제) 등록
             </a>
-            <a href="/view/evidence-upload" class="btn btn-outline-warning btn-lg text-start">
+            <a href="/view/evidence-upload" id="btnEvidenceUpload" class="btn btn-outline-warning btn-lg text-start quick-btn">
               🧾 3. 누락분 수동 영수증 제출
             </a>
             <a href="/view/admin-evidence" class="btn btn-dark btn-lg text-start admin-menu">
@@ -69,9 +69,14 @@
               🧾 [관리자 전용] 정산 최종 마감
             </a>
             <hr>
-            <button type="button" class="btn btn-danger btn-lg fw-bold w-100" onclick="submitTax()">
+          
+            <button type="button" id="btnFinalSubmit" class="btn btn-danger btn-lg fw-bold w-100">
               최종 제출
             </button>
+
+            <div id="submitCompleteMessage" class="alert alert-success mt-2 mb-0 text-center" style="display: none; font-weight: bold; font-size: 0.95rem;">
+              🎉 2026년도 연말정산 서류 최종 제출이 완료되었습니다.<br>(수정 불가 / 인사팀 심사 중)
+            </div>
           </div>
         </div>
       </div>
@@ -111,93 +116,94 @@
     }
 
     // Ajax 호출 로직
-    $(document).ready(function() {
-      const token = localStorage.getItem("jwtToken");
+   $(document).ready(function() {
+    const token = localStorage.getItem("jwtToken");
 
-      if(!token) {
-        alert("로그인이 필요한 서비스입니다.");
-        window.location.href="login";
-        return;     // 아래쪽 차트 그리는 로직이 실행되지 않도록 막음
-      }
+    if(!token) {
+      alert("로그인이 필요한 서비스입니다.");
+      window.location.href = 'login';
+      return;
+    }
 
-      //로그인 한 사용자의 권한
-      const role = localStorage.getItem("role");
+    //관리자 권한 메뉴 숨김 처리
+    const role = localStorage.getItem("role");
+    if(role !== "ROLE_ADMIN") {
+      $(".admin-menu").hide();
+    }
 
-      // 관리자 권한이 아닐 때는 관리자 메뉴 숨김
-      if(role !== "ROLE_ADMIN") {
-        $(".admin-menu").hide()
-      }
+    // 1. 대시보드 데이터 조회 (여기서 상태 체크까지 한 번에 처리)
+    $.ajax({
+      url: '/api/dashboard/me',
+      type: 'GET',
+      headers: {
+        "Authorization": "Bearer " + token
+      },
+      success: function(data) {
+        // 내 정보 및 환급액 세팅
+        $('#employeeName').text(data.name);
+        $('#department').text(data.department);
+        $('#jobIdText').text(data.jobId);
 
-      // 서버에서 데이터 가져오기
-      $.ajax({
-        url: '/api/dashboard/me',
-        type: 'GET',
-        headers: {
-          "Authorization": "Bearer " + localStorage.getItem("jwtToken")
-        },
-        success: function(data) {
-          $('#employeeName').text(data.name);
-          $('#department').text(data.department);
-          $('#jobIdText').text(data.jobId);
+        const amount = data.resultAmout || 0;
+        $('#displayAmount').text('+ ' + amount.toLocaleString() + ' 원');
+        renderRefundChart(amount);              // 차트 렌더링
 
-          const amount = data.resultAmount || 0;
-          $('#displayAmount').text('+ ' + amount.toLocaleString() + ' 원');
-
-          renderRefundChart(amount);    // 받은 데이터로 차트 그리기
-          
-          // 로드 후 잠금
-          if(data.status == "PROCESSING") {
-            $("#submitBtn").prop("disabled",false).text("최종 제출");
-          }
-          if(data.status == "SUBMITTED") {
-            $("#submitBtn").prop("disabled", true).text("제출 완료");
-          }
-          if(data.status == "FINALIZED") {
-            $("#submitBtn").prop("disabled", true).text("최종 마감 완료");
-          }
-        },
-        error: function(xhr) {
-          if(xhr.status == 403 || xhr.status == 401) {
-            alert("로그인이 만료되었거나 권한이 없습니다. 다시 로그인해주세요.")
-            localStorage.getItem('jwtToken');
-            window.location.href = "/login";
-          }
-          
+        // ★ 상태에 따른 UI 제어 (단일 로직으로 통합)
+        if(data.status === "SUBMITTED" || data.status === "FINALIZED" || data.status === "COMPLETED") {
+          lockDashboardAndHideButtons();                              // 이미 제출된 상태면 즉시 락 걸기
+        } else {
+          // 처리 중(PROCESSING) 상태면 버튼 활성화
+          $('#btnFinalSubmit').prop("disabled", false);
         }
-      });
+      },
+      error: function(xhr) {
+        if(xhr == 403 || xhr == 401) {
+          alert("로그인이 만료되었거나 권한이 없습니다. 다시 로그인해주세요.");
+          localStorage.removeItem('jwtToken');
+          window.location.href = "/login";
+        }
+      }
     });
 
-    function logout() {
-      //1. 브라우저 저장소(localStorage)에서 토큰 완전히 삭제
-      localStorage.removeItem("jwtToken");
+    // 2. 대시보드 잠금 및 버튼 숨김 공통 함수
+    function lockDashboardAndHideButtons() {
+      $('#btnFinalSubmit').hide();
+      $('#submitCompleteMessage').show();
 
-      //2. 사용자에게 알림을 띄움
-      alert("로그아웃 되었습니다.");
-
-      //3. 로그인 페이지로 강제 이동
-      window.location.href="/login";
-    }
-    // 최종 제출 버튼 로직
-    function submitTax() {
-      if(!confirm("최종 제출 후에는 수정할 수 없습니다. 제출하시겠습니까?")) {
-        return;
-      }
-      
-      $.ajax({
-        url: "/api/tax/submit",
-        type: "POST",
-        headers: {
-          "Authorization": "Bearer " + localStorage.getItem("jwtToken")
-        },
-        success: function(res) {
-          alert(res);
-          location.reload();
-        },
-        error: function(xhr) {
-          alert("최종 제출 실패: " + xhr.res);
-        }
+      // <a> 태그 클릭 완전 차단(pointer-events: none 적용)
+      $('.quick-btn').addClass('disabled').css({
+        'pointer-events': 'none',
+        'opacity': '0.6'
       });
     }
+
+    // 3. 최종 제출 버튼 이벤트
+    $('#btnFinalSubmit').click(function() {
+      if(confirm("최종 제출을 하시면 더이상 퀵 메뉴(PDF, 부양가족, 영수증)를 수정하실 수 없습니다.")) {
+        $.ajax({
+          url: '/api/tax/final-submit',
+          type: 'POST',
+          headers: {
+            "Authorization": "Bearer " + token
+          },
+          success: function(response) {
+            alert("연말정산 서류가 제출되었습니다.");
+            lockDashboardAndHideButtons();              // 제출 성공 시 화면 새로고침 없이 즉시 락!
+          },
+          error: function() {
+            alert("최종 제출 처리 중 오류가 발생했습니다.");
+          }
+        });
+      }
+    });
+   });
+
+   // 4. 로그아웃 로직 (HTML의 onclick에서 호출하므로 외부 코드)
+   function logout() {
+    localStorage.removeItem("jwtToken");
+    alert("로그아웃 되었습니다.");
+    window.location.href = "/login";
+   }
   </script>
 </body>
 </html>
