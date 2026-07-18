@@ -37,7 +37,7 @@
             <mxPoint x="180" y="280" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wzky8q1Li_-igpvC3kRc-10" value="Spring Securiy Filter&lt;div&gt;(JWT 인증 / 권한 검증)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="wzky8q1Li_-igpvC3kRc-10" value="JWT Authentication Filter&lt;div&gt;(토큰 추출)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="110" y="280" width="140" height="40" as="geometry" />
         </mxCell>
         <mxCell id="wzky8q1Li_-igpvC3kRc-11" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
