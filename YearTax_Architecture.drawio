@@ -95,10 +95,21 @@
           <mxGeometry width="50" height="50" relative="1" as="geometry">
             <mxPoint x="380" y="560" as="sourcePoint" />
             <mxPoint x="414" y="530" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="414" y="500" />
-            </Array>
+            <Array as="points" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="wzky8q1Li_-igpvC3kRc-24" value="JPA Repository" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="530" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="wzky8q1Li_-igpvC3kRc-25" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="414.57" y="570" as="sourcePoint" />
+            <mxPoint x="414.57" y="630" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wzky8q1Li_-igpvC3kRc-26" value="Oracle Database" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="630" width="90" height="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
